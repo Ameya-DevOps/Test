@@ -83,47 +83,47 @@ spec:
 # -----------------------------------------------
 # Java Spring Boot (BankApp) Deployment
 # -----------------------------------------------
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: bankapp
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: bankapp
-  template:
-    metadata:
-      labels:
-        app: bankapp
-    spec:
-      containers:
-      - name: bankapp
-        image: ameya1512/bankapp:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: SPRING_DATASOURCE_URL
-          value: jdbc:mysql://mysql-service:3306/bankappdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-        - name: SPRING_DATASOURCE_USERNAME
-          value: root
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: root-password
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 20
-          periodSeconds: 5
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+# name: bankapp
+#spec:
+# replicas: 1
+# selector:
+#   matchLabels:
+#     app: bankapp
+# template:
+#   metadata:
+#     labels:
+#       app: bankapp
+#   spec:
+#     containers:
+#     - name: bankapp
+#       image: ameya1512/bankapp:latest
+#       ports:
+#       - containerPort: 8080
+#       env:
+#       - name: SPRING_DATASOURCE_URL
+#         value: jdbc:mysql://mysql-service:3306/bankappdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+#       - name: SPRING_DATASOURCE_USERNAME
+#         value: root
+#       - name: SPRING_DATASOURCE_PASSWORD
+#         valueFrom:
+#           secretKeyRef:
+#             name: mysql-secret
+#             key: root-password
+#       readinessProbe:
+#         httpGet:
+#           path: /actuator/health
+#           port: 8080
+#         initialDelaySeconds: 20
+#         periodSeconds: 5
+#       livenessProbe:
+#         httpGet:
+#           path: /actuator/health
+#           port: 8080
+#         initialDelaySeconds: 30
+#         periodSeconds: 10
 ---
 # -----------------------------------------------
 # Bank Application Service
