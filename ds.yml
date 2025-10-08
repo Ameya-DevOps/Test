@@ -1,5 +1,32 @@
+# -----------------------------------------------
+# Secret: Stores MySQL credentials securely
+# -----------------------------------------------
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  root-password: VGVzdEAxMjM=     # base64 of Test@123
+  db-name: YmFua2FwcGRi            # base64 of bankappdb
 ---
+# -----------------------------------------------
+# Persistent Volume Claim for MySQL data
+# -----------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# -----------------------------------------------
 # MySQL Deployment
+# -----------------------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,14 +47,28 @@ spec:
         name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "Test@123"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: root-password
         - name: MYSQL_DATABASE
-          value: "bankappdb"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: db-name
         ports:
         - containerPort: 3306
-          name: mysql
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
 ---
+# -----------------------------------------------
 # MySQL Service
+# -----------------------------------------------
 apiVersion: v1
 kind: Service
 metadata:
@@ -35,10 +76,13 @@ metadata:
 spec:
   ports:
   - port: 3306
+    targetPort: 3306
   selector:
     app: mysql
 ---
-# Java Application Deployment
+# -----------------------------------------------
+# Java Spring Boot (BankApp) Deployment
+# -----------------------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -64,9 +108,26 @@ spec:
         - name: SPRING_DATASOURCE_USERNAME
           value: root
         - name: SPRING_DATASOURCE_PASSWORD
-          value: Test@123
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: root-password
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
 ---
+# -----------------------------------------------
 # Bank Application Service
+# -----------------------------------------------
 apiVersion: v1
 kind: Service
 metadata:
